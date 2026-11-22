@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>Steam Cutter</AssemblyName>
-    <Version>5.0.1</Version>
+    <Version>5.0.2</Version>
     <ApplicationIcon>../cutterico.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <LangVersion>latest</LangVersion>

@@ -32,6 +32,6 @@ def main():
     compile_project('launcher/Launcher.csproj')
     exe=BUILD/'Steam Cutter.exe'
     shutil.copyfile(ROOT/'launcher/bin/Release/net48/Steam Cutter.exe',exe)
-    write_zip(BUILD/'Steam-Cutter-5.0.1-Windows-x64.zip',[('Steam Cutter.exe',exe)])
+    write_zip(BUILD/'Steam-Cutter-5.0.2-Windows-x64.zip',[('Steam Cutter.exe',exe)])
     print(exe)
 if __name__=='__main__': main()

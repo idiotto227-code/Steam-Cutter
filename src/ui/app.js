@@ -58,6 +58,9 @@ $('lang').onchange=e=>{lang=e.target.value;localStorage.setItem('language',lang)
 function selectLayout(value,reprocess){
   if(value===mode && reprocess)return;
   mode=value;localStorage.setItem('layout',mode);document.querySelectorAll('[data-mode]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.mode===mode)));
+  document.querySelectorAll('#layoutHelp [data-guide-for]').forEach(el=>{
+    el.hidden=el.dataset.guideFor!==mode;
+  });
   showSample();if(reprocess && lastFile && !running)enqueue([{file:lastFile,name:lastFile.name}],false);
 }
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>selectLayout(b.dataset.mode,true));

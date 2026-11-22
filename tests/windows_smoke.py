@@ -41,6 +41,10 @@ def main():
         context=browser.contexts[0]
         page=next(p for p in context.pages if 'studio.steamcutter.invalid' in p.url)
         expect(page.locator('#outputPath')).not_to_have_text('',timeout=30000)
+        guide=page.locator('#layoutGuide')
+        guide.locator('summary').click()
+        expect(guide.locator('li:visible').last).to_contain_text('part_5')
+        guide.locator('summary').click()
         page.locator('#autoSteam').uncheck()
         output=Path(page.locator('#outputPath').inner_text());buf=io.BytesIO()
         Image.new('RGB',(750,100),(22,111,180)).save(buf,format='PNG')
