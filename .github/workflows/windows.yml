@@ -2,7 +2,7 @@ name: Windows release
 on:
   push:
     branches: [main]
-    paths: ['Steam Cutter.exe', '.github/workflows/windows.yml']
+    paths: ['Steam Cutter.exe', '.github/workflows/windows.yml', 'tests/**', 'src/**', 'launcher/**', 'tools/**']
   workflow_dispatch:
 permissions:
   contents: read

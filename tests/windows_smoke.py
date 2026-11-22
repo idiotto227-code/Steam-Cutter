@@ -1,5 +1,6 @@
 """Exercise the portable EXE and actual WebView2/WinForms host on Windows."""
 import io
+import json
 import os
 import socket
 import subprocess
@@ -21,14 +22,24 @@ def main():
         try:
             with urlopen(endpoint+'/json/version',timeout=1): break
         except OSError: time.sleep(0.6)
+    targets = []
+    for _ in range(90):
+        with urlopen(endpoint+'/json/list',timeout=3) as response:
+            targets=json.load(response)
+        if any('studio.steamcutter.invalid' in target.get('url','') for target in targets): break
+        time.sleep(.5)
+    else:
+        print('WebView targets:',[(target.get('type'),target.get('url'),target.get('title')) for target in targets],flush=True)
+        subprocess.run(['powershell','-NoProfile','-Command',
+            'Add-Type -AssemblyName UIAutomationClient; $u=[System.Windows.Automation.AutomationElement]; '
+            '$u::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children,[System.Windows.Automation.Condition]::TrueCondition) | '
+            'ForEach-Object { if ($_.Current.Name -like "*Steam*") { $_.FindAll([System.Windows.Automation.TreeScope]::Descendants,'
+            '[System.Windows.Automation.Condition]::TrueCondition) | ForEach-Object { $_.Current.Name } } }'])
+        raise AssertionError('Studio failed to navigate')
     with sync_playwright() as pw:
         browser=pw.chromium.connect_over_cdp(endpoint,timeout=20000)
         context=browser.contexts[0]
-        for _ in range(120):
-            page=next((p for p in context.pages if 'studio.steamcutter.invalid' in p.url),None)
-            if page: break
-            time.sleep(.25)
-        assert page is not None, 'Studio failed to open'
+        page=next(p for p in context.pages if 'studio.steamcutter.invalid' in p.url)
         page.wait_for_function("document.querySelector('#outputPath')?.textContent.length>0")
         page.locator('#autoSteam').uncheck()
         output=Path(page.locator('#outputPath').inner_text());buf=io.BytesIO()
