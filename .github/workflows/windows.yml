@@ -1,0 +1,59 @@
+name: Windows release
+on:
+  push:
+    branches: [main]
+    paths: ['Steam Cutter.exe', '.github/workflows/windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install test dependencies
+        run: python -m pip install Pillow playwright
+      - name: Build sources
+        run: python tools/package.py
+      - name: Test editor
+        shell: pwsh
+        run: |
+          $env:CHROMIUM = (Get-Command chrome -ErrorAction SilentlyContinue).Source
+          if (!$env:CHROMIUM) { $env:CHROMIUM = 'C:\Program Files\Google\Chrome\Application\chrome.exe' }
+          python tests/test_editor.py -v
+      - name: Test portable executable and native export
+        run: python tests/windows_smoke.py "Steam Cutter.exe"
+      - name: Package the tested executable
+        shell: pwsh
+        run: |
+          Compress-Archive -LiteralPath 'Steam Cutter.exe' -DestinationPath 'Steam-Cutter-5.0.0-Windows-x64.zip'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable
+          path: Steam-Cutter-5.0.0-Windows-x64.zip
+  publish:
+    needs: windows
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-portable
+      - name: Publish v5.0.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          if ! gh release view v5.0.0 >/dev/null 2>&1; then
+            gh release create v5.0.0 Steam-Cutter-5.0.0-Windows-x64.zip --target "$BUILD_SHA" --title 'Steam Cutter 5.0.0' --notes 'Portable Windows x64 build. Image and animated showcase slicing, URL and inbox import, and an integrated Steam window.'
+          fi

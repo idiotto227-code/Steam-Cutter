@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob:; worker-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'"><title>Steam Cutter</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="mast"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Steam <b>Cutter</b></div><span class="version">v5.0</span><select id="lang" aria-label="Language"><option value="ru">Русский</option><option value="uk">Українська</option><option value="en">English</option></select></header>
+<main>
+<div class="heading"><h1 data-t="studio"></h1><div class="status"><i></i><span data-t="offline"></span></div></div>
+<div class="workspace">
+<section class="preview-card"><div class="card-head"><strong data-t="preview"></strong><span id="previewLabel"></span></div>
+<div id="stage"><div id="picture" class="workshop sample"><i></i><i></i><i></i><i></i></div></div>
+<div class="preview-foot"><strong id="previewName">Spectrum</strong><span id="geometry">5 × 150 px</span></div>
+</section>
+<section class="settings"><h2 data-t="layout"></h2>
+<div id="layouts" role="group"><button data-mode="workshop" aria-pressed="true"><span class="five" aria-hidden="true">▏▏▏▏▏</span><span data-t="workshop"></span><i>✓</i></button><button data-mode="artwork" aria-pressed="false"><span class="two" aria-hidden="true">▰ ▏</span><span data-t="artwork"></span><i>✓</i></button></div>
+<h2 data-t="source"></h2><nav class="tabs" aria-label="Import"><button data-tab="file" aria-pressed="true" data-t="file"></button><button data-tab="url" aria-pressed="false" data-t="url"></button><button data-tab="inbox" aria-pressed="false" data-t="inbox"></button></nav>
+<div class="source" id="file"><span class="drop-icon" aria-hidden="true">↓</span><p data-t="drop"></p><small>GIF · PNG · JPG · WebP</small><button class="primary" id="choose" data-t="choose"></button><input id="picker" type="file" accept=".gif,.png,.apng,.jpg,.jpeg,.webp" multiple hidden></div>
+<div class="source" id="url" hidden><label for="urlInput" data-t="linkLabel"></label><input id="urlInput" type="url" placeholder="https://…" spellcheck="false"><small data-t="linkHint"></small><button class="primary" id="getUrl" data-t="process"></button></div>
+<div class="source" id="inbox" hidden><p data-t="inboxHint"></p><button class="linklike" id="openInbox" data-t="openInbox"></button><button class="primary" id="runInbox" data-t="processAll"></button></div>
+<label class="auto-steam"><input id="autoSteam" type="checkbox" checked><span data-t="autoSteam"></span></label>
+</section></div>
+<div class="output"><div><b data-t="saveTo"></b><span id="outputPath"></span></div><button class="subtle" id="changeOutput" data-t="change"></button></div>
+<section id="activity" hidden><div class="activity-head"><h2 data-t="jobs"></h2><span id="count"></span></div><div id="jobs" aria-live="polite"></div></section>
+<p id="notice" role="status" aria-live="polite"></p>
+</main><script type="module" src="app.js"></script></body></html>
