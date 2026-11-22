@@ -10,7 +10,7 @@ import unittest
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from PIL import Image, ImageDraw
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 BRIDGE = """
@@ -46,13 +46,13 @@ class StudioTests(unittest.TestCase):
         self.page=self.browser.new_page(viewport={'width':1120,'height':760},locale='ru-RU')
         self.page.add_init_script(BRIDGE)
         self.page.goto('http://127.0.0.1:%s/index.html'%self.server.server_port)
-        self.page.wait_for_function("document.querySelector('#outputPath').textContent.length > 0")
+        expect(self.page.locator('#outputPath')).not_to_have_text('')
     def tearDown(self): self.page.close()
     def file(self, image, name, fmt, **kw):
         buf=io.BytesIO();image.save(buf,format=fmt,**kw)
         return dict(name=name,mimeType='application/octet-stream',buffer=buf.getvalue())
     def parts(self,job=1):
-        self.page.wait_for_function('n=>window.__ops.filter(x=>x==="finish").length>=n || document.querySelector(".job.error")',arg=job,timeout=45000)
+        self.page.locator('.job .publish, .job.error').nth(job-1).wait_for(timeout=45000)
         self.assertFalse(self.page.locator('.job.error').count(),self.page.locator('#jobs').inner_text())
         return [Image.open(io.BytesIO(base64.b64decode(p['bytes']))) for p in self.page.evaluate('n=>__exports[n-1]',job)]
     def test_static_sizes_and_pixels(self):
