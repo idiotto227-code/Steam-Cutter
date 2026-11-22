@@ -97,7 +97,7 @@ namespace SteamCutter
                 var addresses = await Dns.GetHostAddressesAsync(uri.DnsSafeHost);
                 if (addresses.Length == 0 || addresses.Any(a => !PublicAddress(a))) throw new InvalidDataException("urlInvalid");
                 using (var request = new HttpRequestMessage(HttpMethod.Get, uri)) {
-                    request.Headers.UserAgent.ParseAdd("SteamCutter/5.0");
+                    request.Headers.UserAgent.ParseAdd("SteamCutter/5.0.1");
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timer.Token)) {
                         int status = (int)response.StatusCode;
                         if (status >= 300 && status < 400 && response.Headers.Location != null) { uri = new Uri(uri, response.Headers.Location); continue; }

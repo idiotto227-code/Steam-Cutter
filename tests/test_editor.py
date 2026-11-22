@@ -111,6 +111,25 @@ class StudioTests(unittest.TestCase):
         self.page.locator('.publish').first.wait_for()
         self.assertEqual(self.page.locator('.job.error').count(),1)
         self.assertEqual(len(self.page.evaluate('__exports[0]')),5)
+    def test_layout_diagrams_do_not_overlap_text(self):
+        self.page.set_viewport_size({'width': 760, 'height': 600})
+        for lang in ('ru', 'uk', 'en'):
+            self.page.locator('#lang').select_option(lang)
+            for zoom in (1, 1.25, 1.5, 2):
+                self.page.evaluate('scale => document.body.style.zoom = scale', zoom)
+                for mode, count in [('workshop', 5), ('artwork', 2)]:
+                    with self.subTest(lang=lang, zoom=zoom, mode=mode):
+                        button = self.page.locator(f'[data-mode="{mode}"]')
+                        diagram = button.locator('.layout-diagram')
+                        bars = [bar.bounding_box() for bar in diagram.locator('b').all()]
+                        label = button.locator('[data-t]').bounding_box()
+                        self.assertEqual(len(bars), count)
+                        for bar in bars:
+                            self.assertGreater(bar['width'], 0)
+                            self.assertAlmostEqual(bar['y'], bars[0]['y'], delta=1)
+                        self.assertGreaterEqual(label['x'] - (bars[-1]['x'] + bars[-1]['width']), 10 * zoom)
+                        if mode == 'artwork':
+                            self.assertGreater(bars[0]['width'], bars[1]['width'])
     def test_language_and_layout(self):
         self.page.locator('#lang').select_option('uk');self.assertEqual(self.page.locator('h1').inner_text(),'Студія вітрин')
         self.page.locator('[data-mode=artwork]').click();self.page.reload()

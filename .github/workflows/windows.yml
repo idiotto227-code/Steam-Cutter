@@ -33,11 +33,11 @@ jobs:
       - name: Package the tested executable
         shell: pwsh
         run: |
-          Compress-Archive -LiteralPath 'Steam Cutter.exe' -DestinationPath 'Steam-Cutter-5.0.0-Windows-x64.zip'
+          Compress-Archive -LiteralPath 'Steam Cutter.exe' -DestinationPath 'Steam-Cutter-5.0.1-Windows-x64.zip'
       - uses: actions/upload-artifact@v4
         with:
           name: windows-portable
-          path: Steam-Cutter-5.0.0-Windows-x64.zip
+          path: Steam-Cutter-5.0.1-Windows-x64.zip
   publish:
     needs: windows
     if: github.ref == 'refs/heads/main'
@@ -48,12 +48,12 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: windows-portable
-      - name: Publish v5.0.0
+      - name: Publish v5.0.1
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           BUILD_SHA: ${{ github.sha }}
         run: |
-          if ! gh release view v5.0.0 >/dev/null 2>&1; then
-            gh release create v5.0.0 Steam-Cutter-5.0.0-Windows-x64.zip --target "$BUILD_SHA" --title 'Steam Cutter 5.0.0' --notes 'Portable Windows x64 build. Image and animated showcase slicing, URL and inbox import, and an integrated Steam window.'
+          if ! gh release view v5.0.1 >/dev/null 2>&1; then
+            gh release create v5.0.1 Steam-Cutter-5.0.1-Windows-x64.zip --target "$BUILD_SHA" --title 'Steam Cutter 5.0.1' --notes 'Исправлено наложение схем на названия витрин при увеличенном масштабе Windows. Обе схемы, текст и галочка теперь занимают отдельные колонки.'
           fi
