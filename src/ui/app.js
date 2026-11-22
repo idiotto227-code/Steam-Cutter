@@ -99,8 +99,14 @@ function candidates(html,base){
 }
 async function readTicket(ticket){
   try{if(ticket.size>32*1024*1024)throw new Error('tooBig');
-    const resp=await fetch('/media/'+ticket.token);if(!resp.ok)throw new Error('unsupported');
-    return new File([await resp.blob()],ticket.name);
+    const bytes=new Uint8Array(ticket.size);
+    for(let at=0;at<bytes.length;){
+      const encoded=await rpc('readMedia',{token:ticket.token,offset:at});
+      const chunk=Uint8Array.fromBase64 ? Uint8Array.fromBase64(encoded) : Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
+      if(!chunk.length || chunk.length>bytes.length-at)throw new Error('unsupported');
+      bytes.set(chunk,at);at+=chunk.length;
+    }
+    return new File([bytes],ticket.name);
   }finally{await rpc('releaseMedia',{token:ticket.token});}
 }
 async function fromLink(link){

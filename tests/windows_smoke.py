@@ -61,7 +61,9 @@ def main():
         inbox.mkdir(parents=True,exist_ok=True)
         (inbox/(name+'-inbox.png')).write_bytes(buf.getvalue())
         page.locator('[data-tab=inbox]').click();page.locator('#runInbox').click()
-        page.locator('.publish').nth(2).wait_for(timeout=30000)
+        try: page.locator('.publish').nth(2).wait_for(timeout=30000)
+        except Exception:
+            print(page.locator('main').inner_text(),flush=True);raise
         assert (output/(name+'-inbox - artwork')/'02_side_100.png').is_file()
         page.locator('.publish').first.click()
         for _ in range(80):

@@ -55,13 +55,6 @@ namespace SteamCutter
                 core.NavigationStarting += (s, e) => e.Cancel = e.Uri != Origin + "/index.html";
                 core.NewWindowRequested += (s, e) => e.Handled = true;
                 core.PermissionRequested += (s, e) => e.State = CoreWebView2PermissionState.Deny;
-                core.AddWebResourceRequestedFilter(Origin + "/media/*", CoreWebView2WebResourceContext.All);
-                core.WebResourceRequested += (s, e) => {
-                    string token = new Uri(e.Request.Uri).AbsolutePath.Substring(7);
-                    var stream = files.OpenMedia(token);
-                    e.Response = environment.CreateWebResourceResponse(stream, stream == null ? 404 : 200,
-                        stream == null ? "Not Found" : "OK", "Content-Type: application/octet-stream\r\nCache-Control: no-store");
-                };
                 core.WebMessageReceived += Receive;
                 core.Navigate(Origin + "/index.html");
             }
@@ -105,6 +98,7 @@ namespace SteamCutter
                         if (dlg.ShowDialog(this) == DialogResult.OK) files.SetOutput(dlg.SelectedPath);
                     return files.Output;
                 case "url": return await files.ImportUrl((string)m["url"]);
+                case "readMedia": return await files.ReadMedia((string)m["token"], Convert.ToInt64(m["offset"]));
                 case "releaseMedia": files.Release((string)m["token"]); break;
                 case "begin": return files.Begin((string)m["name"], (string)m["mode"]);
                 case "write":

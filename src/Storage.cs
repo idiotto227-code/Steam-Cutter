@@ -58,13 +58,24 @@ namespace SteamCutter
             var token = Guid.NewGuid().ToString("N"); media[token] = item;
             return new { kind = "image", name, token, size };
         }
-        public Stream OpenMedia(string token)
+        public async Task<string> ReadMedia(string token, long offset)
         {
-            if (!media.TryGetValue(token, out var m)) return null;
-            if (m.Bytes != null) return new MemoryStream(m.Bytes, false);
-            try { return new FileInfo(m.File).Length <= MaxInput ? File.OpenRead(m.File) : null; }
-            catch (IOException) { return null; }
-            catch (UnauthorizedAccessException) { return null; }
+            if (!media.TryGetValue(token, out var item)) throw new FileNotFoundException();
+            using (Stream stream = item.Bytes == null
+                ? (Stream)new FileStream(item.File, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, true)
+                : new MemoryStream(item.Bytes, false)) {
+                if (stream.Length > MaxInput) throw new InvalidDataException("tooBig");
+                if (offset < 0 || offset >= stream.Length) throw new EndOfStreamException();
+                stream.Position = offset;
+                var buffer = new byte[(int)Math.Min(768 * 1024, stream.Length - offset)];
+                int read = 0;
+                while (read < buffer.Length) {
+                    int n = await stream.ReadAsync(buffer, read, buffer.Length - read);
+                    if (n == 0) throw new EndOfStreamException();
+                    read += n;
+                }
+                return Convert.ToBase64String(buffer);
+            }
         }
         public void Release(string token) { media.Remove(token); }
         static bool PublicAddress(IPAddress address)

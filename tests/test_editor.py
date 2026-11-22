@@ -23,8 +23,9 @@ window.chrome ||= {}; window.chrome.webview={
    if(op==='begin'){window.__exports.push([]);value='job'+window.__exports.length;}
    if(op==='write')window.__exports.at(-1).push(data);
    if(op==='url')value=data.url.endsWith('/page') ? {kind:'html',url:data.url,html:'<meta property="og:image" content="/cover">'}
-      : {kind:'image',token:'one',name:'cover.png',size:72};
-   if(op==='inbox')value=[{token:'one',name:'inbox.png',size:72}];
+      : {kind:'image',token:'one',name:'cover.png',size:window.__media.size};
+   if(op==='readMedia')value=window.__media.base64;
+   if(op==='inbox')value=[{token:'one',name:'inbox.png',size:window.__media.size}];
    listeners.forEach(fn=>fn({data:{id,value}}));
  })
 };"""
@@ -99,7 +100,7 @@ class StudioTests(unittest.TestCase):
             self.assertEqual(total,52*60)
     def test_link_inbox_jpeg(self):
         data=self.file(Image.new('RGB',(310,80),'red'),'pic.jpg','JPEG')
-        self.page.route('**/media/one',lambda r:r.fulfill(body=data['buffer'],content_type='image/jpeg'))
+        self.page.evaluate('(m)=>window.__media=m',dict(size=len(data['buffer']),base64=base64.b64encode(data['buffer']).decode()))
         self.page.locator('[data-tab=url]').click();self.page.locator('#urlInput').fill('https://example.org/page');self.page.locator('#getUrl').click()
         self.assertEqual(len(self.parts()),5)
         self.page.locator('[data-tab=inbox]').click();self.page.locator('#runInbox').click()
