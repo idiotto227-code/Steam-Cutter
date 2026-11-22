@@ -69,12 +69,19 @@ def main():
         except Exception:
             print(page.locator('main').inner_text(),flush=True);raise
         assert (output/(name+'-inbox - artwork')/'02_side_100.png').is_file()
+        page.locator('[data-mode=profile]').click()
+        tall=io.BytesIO()
+        Image.new('RGB',(140,2200),(38,87,120)).save(tall,format='PNG')
+        page.locator('#picker').set_input_files({'name':'scroll.png','mimeType':'image/png','buffer':tall.getvalue()})
+        expect(page.locator('#geometry')).to_have_text('140 × 2200 px')
+        stage=page.locator('#profileStage')
+        assert stage.evaluate('s=>{s.scrollTop=s.scrollHeight;return s.scrollTop>0}')
         page.locator('.publish').first.click()
         for _ in range(80):
             matches=[p for p in context.pages if p.url.startswith('https://steamcommunity.com/') or p.url.startswith('https://store.steampowered.com/')]
             if matches: break
             page.wait_for_timeout(250)
         assert matches,'Official Steam window did not navigate'
-        print('Portable launch, native I/O, both layouts and Steam navigation passed.')
+        print('Portable launch, native I/O, both export layouts, scrollable preview and Steam navigation passed.')
         browser.close()
 if __name__=='__main__': main()

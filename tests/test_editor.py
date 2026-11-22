@@ -117,7 +117,7 @@ class StudioTests(unittest.TestCase):
             self.page.locator('#lang').select_option(lang)
             for zoom in (1, 1.25, 1.5, 2):
                 self.page.evaluate('scale => document.body.style.zoom = scale', zoom)
-                for mode, count in [('workshop', 5), ('artwork', 2)]:
+                for mode, count in [('workshop', 5), ('artwork', 2), ('profile', 1)]:
                     with self.subTest(lang=lang, zoom=zoom, mode=mode):
                         button = self.page.locator(f'[data-mode="{mode}"]')
                         diagram = button.locator('.layout-diagram')
@@ -130,6 +130,57 @@ class StudioTests(unittest.TestCase):
                         self.assertGreaterEqual(label['x'] - (bars[-1]['x'] + bars[-1]['width']), 10 * zoom)
                         if mode == 'artwork':
                             self.assertGreater(bars[0]['width'], bars[1]['width'])
+    def test_scrollable_profile_preview(self):
+        self.page.locator('[data-mode=profile]').click()
+        stage=self.page.locator('#profileStage')
+        image=stage.locator('#profileArt img')
+        expect(self.page.locator('#autoSteam')).to_be_hidden()
+        expect(self.page.locator('#getUrl')).to_have_text('Открыть предпросмотр')
+        # A genuine long file exceeds the slicing height limit and still previews.
+        src=Image.new('RGB',(630,5040),'navy')
+        ImageDraw.Draw(src).rectangle((0,4950,629,5039),fill='orange')
+        self.page.locator('#picker').set_input_files(self.file(src,'long.png','PNG'))
+        expect(self.page.locator('#geometry')).to_have_text('630 × 5040 px')
+        expect(self.page.locator('#previewLabel')).to_have_text('МАКЕТ')
+        for width in (1100,490):
+            self.page.set_viewport_size({'width':width,'height':740})
+            box=image.bounding_box()
+            self.assertAlmostEqual(box['height']/box['width'],8,places=2)
+            stage.evaluate('s => s.scrollTop = s.scrollHeight')
+            self.assertGreater(stage.evaluate('s => s.scrollTop'),0)
+            self.assertLessEqual(image.bounding_box()['y']+image.bounding_box()['height'],
+                                 stage.bounding_box()['y']+stage.bounding_box()['height'])
+        self.assertNotIn('steam',self.page.evaluate('__ops'))
+        self.assertNotIn('begin',self.page.evaluate('__ops'))
+        self.page.reload()
+        expect(stage).to_be_visible()
+        expect(self.page.locator('#previewLabel')).to_have_text('ПРИМЕР')
+    def test_profile_animated_source_and_link(self):
+        gif=self.file(Image.new('RGB',(30,120),'red'),'motion.gif','GIF',save_all=True,
+                      append_images=[Image.new('RGB',(30,120),'blue')],duration=100,loop=0)
+        self.page.locator('[data-mode=profile]').click()
+        self.page.locator('#picker').set_input_files(gif)
+        image=self.page.locator('#profileArt img')
+        expect(image).to_have_attribute('alt','motion.gif')
+        box=image.bounding_box()
+        sample=dict(x=int(box['x'])+12,y=int(box['y'])+12,width=2,height=2)
+        colors=set()
+        for _ in range(12):
+            pixel=Image.open(io.BytesIO(self.page.screenshot(clip=sample))).convert('RGB').getpixel((0,0))
+            colors.add(pixel)
+            if colors=={(255,0,0),(0,0,255)}: break
+            self.page.wait_for_timeout(45)
+        self.assertEqual(colors,{(255,0,0),(0,0,255)})
+        old=image.get_attribute('src')
+        # A different extension and missing MIME from the native bridge still preview correctly.
+        data=self.file(Image.new('RGB',(120,360),'green'),'source.webp','WEBP')['buffer']
+        self.page.evaluate('m=>window.__media=m',dict(size=len(data),base64=base64.b64encode(data).decode()))
+        self.page.locator('[data-tab=url]').click()
+        self.page.locator('#urlInput').fill('https://example.org/page')
+        self.page.locator('#getUrl').click()
+        expect(self.page.locator('#geometry')).to_have_text('120 × 360 px')
+        self.assertNotEqual(image.get_attribute('src'),old)
+        self.assertNotIn('begin',self.page.evaluate('__ops'))
     def test_contextual_instructions(self):
         help_box=self.page.locator('#layoutHelp')
         summary=help_box.locator('summary')

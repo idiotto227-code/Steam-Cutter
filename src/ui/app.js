@@ -1,10 +1,13 @@
 import {languages,translate} from './lang.js';
+import {identify} from './engine.js';
 const $=id=>document.getElementById(id);
 const short=navigator.language.toLowerCase().split('-')[0];
 let lang=localStorage.getItem('language') || (languages.includes(short)?short:'en');
-let mode=localStorage.getItem('layout')==='artwork'?'artwork':'workshop';
+const savedMode=localStorage.getItem('layout');
+let mode=['artwork','profile'].includes(savedMode)?savedMode:'workshop';
 const t=key=>translate(key,lang), calls=new Map(), jobs=[], bridge=window.chrome?.webview;
 let sequence=0, current=null, lastFile=null, preview=null, urls=[], running=false;
+let profileRequest=0, profileUrl=null;
 function rpc(op,data={}) {
   return new Promise((resolve,reject)=>{
     if(!bridge) return reject(new Error('Steam Cutter desktop host required.'));
@@ -35,8 +38,44 @@ function renderJob(j){
 }
 function showSample(){
   preview=null; urls.forEach(URL.revokeObjectURL);urls=[];
+  profileRequest++;
+  const previousUrl=profileUrl;
+  profileUrl=null;
+  const sample=$('profileArt').firstElementChild;
+  sample.className='profile-sample';sample.alt='Spectrum';sample.src='spectrum.jpg';
+  if(previousUrl)URL.revokeObjectURL(previousUrl);
+  $('profileStage').scrollTop=0;
+  if(mode==='profile'){
+    $('previewName').textContent='Spectrum';$('previewLabel').textContent=t('example');$('geometry').textContent='3 : 7';
+    return;
+  }
   const pic=$('picture');pic.className=mode+' sample';pic.removeAttribute('style');pic.replaceChildren(...Array.from({length:4},()=>document.createElement('i')));
   $('previewName').textContent='Spectrum';$('previewLabel').textContent=t('example');$('geometry').textContent=mode==='workshop'?'5 × 150 px':'506 + 100 px';
+}
+async function showProfile(input){
+  const request=++profileRequest;
+  let url;
+  note(input.link?'fetching':'reading');
+  try {
+    const file=input.file || await fromLink(input.link);
+    if(request!==profileRequest)return;
+    if(file.size>32*1024*1024)throw new Error('tooBig');
+    const [mime,width,height]=identify(await file.arrayBuffer());
+    if(!width || !height || width*height>48_000_000)throw new Error('previewLimit');
+    if(request!==profileRequest)return;
+    url=URL.createObjectURL(file.slice(0,file.size,mime));
+    const img=new Image();img.alt=file.name;img.src=url;
+    try{await img.decode();}catch{throw new Error('unsupported');}
+    if(request!==profileRequest)return;
+    $('profileArt').replaceChildren(img);
+    if(profileUrl)URL.revokeObjectURL(profileUrl);
+    profileUrl=url;url=null;lastFile=file;
+    $('profileStage').scrollTop=0;
+    $('previewName').textContent=file.name;$('previewLabel').textContent=t('mockup');
+    $('geometry').textContent=img.naturalWidth+' × '+img.naturalHeight+' px';
+    note('');
+  }catch(e){if(request===profileRequest)note(e);}
+  finally{if(url)URL.revokeObjectURL(url);}
 }
 function showResult(j,res){
   urls.forEach(URL.revokeObjectURL);urls=res.parts.map(p=>URL.createObjectURL(p));preview=j;
@@ -52,7 +91,7 @@ function showResult(j,res){
 function language(){
   document.documentElement.lang=lang; $('lang').value=lang;
   document.querySelectorAll('[data-t]').forEach(el=>el.textContent=t(el.dataset.t));jobs.forEach(renderJob);
-  $('previewLabel').textContent=t(preview?'result':'example');
+  $('previewLabel').textContent=t(profileUrl?'mockup':preview?'result':'example');
 }
 $('lang').onchange=e=>{lang=e.target.value;localStorage.setItem('language',lang);language();};
 function selectLayout(value,reprocess){
@@ -61,7 +100,14 @@ function selectLayout(value,reprocess){
   document.querySelectorAll('#layoutHelp [data-guide-for]').forEach(el=>{
     el.hidden=el.dataset.guideFor!==mode;
   });
-  showSample();if(reprocess && lastFile && !running)enqueue([{file:lastFile,name:lastFile.name}],false);
+  const profile=mode==='profile';
+  if(profile && !$('inbox').hidden)document.querySelector('[data-tab="file"]').click();
+  document.querySelectorAll('[data-export-only], [data-tab="inbox"], .auto-steam, .output').forEach(el=>el.hidden=profile);
+  $('stage').hidden=profile;$('profileStage').hidden=!profile;$('picker').multiple=!profile;
+  for(const [id,key] of [['choose',profile?'choosePreview':'choose'],['getUrl',profile?'openPreview':'process']]){
+    $(id).dataset.t=key;$(id).textContent=t(key);
+  }
+  note('');showSample();if(reprocess && lastFile && !running)enqueue([{file:lastFile,name:lastFile.name}],false);
 }
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>selectLayout(b.dataset.mode,true));
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(p=>{const active=p===b;p.setAttribute('aria-pressed',String(active));$(p.dataset.tab).hidden=!active;});if(b.dataset.tab==='url')$('urlInput').focus();});
@@ -69,6 +115,10 @@ $('autoSteam').checked=localStorage.getItem('autoSteam')!=='off';
 $('autoSteam').onchange=e=>localStorage.setItem('autoSteam',e.target.checked?'on':'off');
 function enqueue(inputs,auto=true){
   if(!inputs.length)return;
+  if(mode==='profile'){
+    if(inputs.length===1)void showProfile(inputs[0]);else note('onePreview');
+    return;
+  }
   note('');$('activity').hidden=false;
   const batch={open:auto && $('autoSteam').checked,first:null,remaining:inputs.length};
   for(const input of inputs){const row=document.createElement('div');const j={...input,mode,state:'queued',row,batch};

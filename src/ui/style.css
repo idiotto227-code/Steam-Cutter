@@ -24,3 +24,33 @@
 .layout-help summary:focus-visible { outline: 2px solid var(--aqua); outline-offset: 2px; }
 .layout-help ol { margin: 5px 0 2px; padding-inline-start: 1.6em; }
 .layout-help li + li { margin-top: 5px; }
+
+[data-mode="profile"] .layout-diagram { grid-template-columns: 12px; justify-content: center; }
+#profileStage {
+  height: clamp(275px, 57vh, 535px);
+  overflow: auto;
+  scrollbar-gutter: stable;
+  scrollbar-color: #536775 #131c26;
+  border-block: 1px solid #263440;
+  background: linear-gradient(155deg, #2c3c4b, #1a2735 35%, #111a24);
+}
+#profileStage:focus-visible { outline: 2px solid var(--aqua); outline-offset: -3px; }
+.profile-page { max-width: 710px; margin: auto; padding: 12px clamp(8px, 2vw, 24px) 16px; }
+.profile-header {
+  display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 15px;
+  color: #e5e9ee; background: linear-gradient(110deg, #344455, #25303b);
+}
+.profile-header strong { font-size: 17px; font-weight: 500; }
+.profile-avatar {
+  width: 40px; height: 40px; flex: none; border: 1px solid #65839a;
+  background: radial-gradient(circle at 50% 36%, #aabac4 0 17%, transparent 19%),
+    radial-gradient(ellipse at 50% 110%, #8499a8 0 42%, transparent 44%), #384957;
+}
+.profile-showcase { margin-top: 8px; padding: 12px; border-radius: 3px; background: #171d23; }
+.profile-showcase h3 { margin: 0 0 12px; font-size: 15px; font-weight: 500; color: #dde3e8; }
+#profileArt { max-width: 630px; margin-inline: auto; background: #101316; }
+#profileArt img { display: block; width: 100%; height: auto; }
+#profileArt img.profile-sample { aspect-ratio: 3 / 7; object-fit: cover; }
+.preview-foot strong { min-width: 0; overflow-wrap: anywhere; }
+#geometry { flex-shrink: 0; }
+.dragging #profileStage { outline: 2px dashed var(--aqua); outline-offset: -3px; }

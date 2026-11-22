@@ -1,12 +1,18 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob:; worker-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'"><title>Steam Cutter</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header class="mast"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Steam <b>Cutter</b></div><span class="version">v5.0.2</span><select id="lang" aria-label="Language"><option value="ru">Русский</option><option value="uk">Українська</option><option value="en">English</option></select></header>
+<header class="mast"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Steam <b>Cutter</b></div><span class="version">v5.0.3</span><select id="lang" aria-label="Language"><option value="ru">Русский</option><option value="uk">Українська</option><option value="en">English</option></select></header>
 <main>
 <div class="heading"><h1 data-t="studio"></h1><div class="status"><i></i><span data-t="offline"></span></div></div>
 <div class="workspace">
 <section class="preview-card"><div class="card-head"><strong data-t="preview"></strong><span id="previewLabel"></span></div>
 <div id="stage"><div id="picture" class="workshop sample"><i></i><i></i><i></i><i></i></div></div>
+<div id="profileStage" hidden role="region" tabindex="0" aria-labelledby="profileTitle">
+  <div class="profile-page">
+    <header class="profile-header"><span class="profile-avatar" aria-hidden="true"></span><strong id="profileTitle" data-t="profileTitle"></strong></header>
+    <section class="profile-showcase"><h3 data-t="singleArtwork"></h3><div id="profileArt"><img class="profile-sample" src="spectrum.jpg" alt="Spectrum"></div></section>
+  </div>
+</div>
 <div class="preview-foot"><strong id="previewName">Spectrum</strong><span id="geometry">5 × 150 px</span></div>
 </section>
 <section class="settings"><h2 data-t="layout"></h2>
@@ -19,20 +25,27 @@
     <span class="layout-diagram" aria-hidden="true"><b></b><b></b></span>
     <span data-t="artwork"></span><i aria-hidden="true">✓</i>
   </button>
+  <button data-mode="profile" aria-pressed="false">
+    <span class="layout-diagram" aria-hidden="true"><b></b></span>
+    <span data-t="profile"></span><i aria-hidden="true">✓</i>
+  </button>
 </div>
 <div class="layout-help" id="layoutHelp">
   <p data-guide-for="workshop" data-t="hintWorkshop"></p>
   <p data-guide-for="artwork" data-t="hintArtwork" hidden></p>
+  <p data-guide-for="profile" data-t="hintProfile" hidden></p>
   <details id="layoutGuide">
     <summary data-t="guideTitle"></summary>
     <ol>
-      <li data-t="guideImport"></li>
+      <li data-export-only data-t="guideImport"></li>
       <li data-guide-for="workshop" data-t="guideWorkshopMedia"></li>
-      <li data-t="guideFiles"></li>
+      <li data-export-only data-t="guideFiles"></li>
       <li data-guide-for="workshop" data-t="guideWorkshopUpload"></li>
       <li data-guide-for="workshop" data-t="guideWorkshopPlace"></li>
       <li data-guide-for="artwork" data-t="guideArtworkUpload" hidden></li>
       <li data-guide-for="artwork" data-t="guideArtworkPlace" hidden></li>
+      <li data-guide-for="profile" data-t="guidePreviewImport" hidden></li>
+      <li data-guide-for="profile" data-t="guidePreviewScroll" hidden></li>
     </ol>
   </details>
 </div>
